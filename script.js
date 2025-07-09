@@ -5,7 +5,7 @@ function calculateXP() {
   const lvl20 = 24000;
   const lvl25 = 42000;
   const lvl30 = 67000;
-  const lvl35 = 109000;
+  const lvl35 = 100630;
 
   const input = document.getElementById('xpInput');
   const xp = parseInt(input.value);
