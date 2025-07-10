@@ -2,7 +2,7 @@ function calculateXP() {
   const lvl5 = 1150;
   const lvl10 = 4675;
   const lvl15 = 11825;
-  const lvl20 = 2855;
+  const lvl20 = 23850;
   const lvl25 = 42000;
   const lvl30 = 67525;
   const lvl35 = 101675;
