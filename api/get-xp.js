@@ -1,18 +1,30 @@
-import fs from 'fs';
-import path from 'path';
+import { createClient } from '@supabase/supabase-js';
 
-export default function handler(req, res) {
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
+
+export default async function handler(req, res) {
   const { username } = req.query;
 
-  if (!username) return res.status(400).json({ error: "Username is required" });
+  if (!username) {
+    return res.status(400).json({ error: "Username is required" });
+  }
 
-  const filePath = path.resolve('./data/xp.json');
-  if (!fs.existsSync(filePath)) return res.status(404).json({ error: "Data not found" });
+  const { data, error } = await supabase
+    .from('users_xp')
+    .select('username, xp, level')
+    .ilike('username', username); // нечувствительный к регистру
 
-  const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-  const player = data.find(p => p.username.toLowerCase() === username.toLowerCase());
+  if (error) {
+    console.error("Supabase error:", error);
+    return res.status(500).json({ error: "Database error" });
+  }
 
-  if (!player) return res.status(404).json({ error: "User not found" });
+  if (!data || data.length === 0) {
+    return res.status(404).json({ error: "User not found" });
+  }
 
-  res.status(200).json({ username: player.username, xp: player.xp, level: player.level });
+  res.status(200).json(data[0]);
 }
