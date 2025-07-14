@@ -2,10 +2,17 @@ import fs from 'fs';
 import path from 'path';
 
 export default async function handler(req, res) {
-  const token = process.env.MEE6_TOKEN; // ⚠️ Указывай именно так в Vercel
+  // 🔐 Проверка доступа по секрету
+  if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
+    return res.status(401).end('Unauthorized');
+  }
+
+  const token = process.env.MEE6_TOKEN;
   const guildId = "1317255994459426868";
 
-  if (!token) return res.status(401).json({ error: "MEE6_TOKEN missing in env vars" });
+  if (!token) {
+    return res.status(500).json({ error: "MEE6_TOKEN is not set" });
+  }
 
   const allPlayers = [];
   let page = 0;
@@ -14,27 +21,35 @@ export default async function handler(req, res) {
     const url = `https://mee6.xyz/api/plugins/levels/leaderboard/${guildId}?limit=100&page=${page}`;
     const response = await fetch(url, {
       headers: {
-        "Authorization": token, // ⚠️ Без "Bearer"
+        "Authorization": token,
         "User-Agent": "Mozilla/5.0"
       }
     });
 
     if (!response.ok) {
-      return res.status(response.status).json({ error: `Failed to fetch: ${response.status}` });
+      return res.status(response.status).json({
+        error: `Failed to fetch page ${page}: ${response.statusText}`
+      });
     }
 
     const data = await response.json();
-    if (!data.players || data.players.length === 0) break;
+    const players = data?.players || [];
 
-    allPlayers.push(...data.players);
+    if (players.length === 0) break;
+
+    allPlayers.push(...players);
+    console.log(`Fetched page ${page} (${players.length} players)`);
     page++;
-    await new Promise(r => setTimeout(r, 500)); // пауза между запросами
+    await new Promise(r => setTimeout(r, 500)); // ⏳ защитимся от спама
   }
 
-  // Путь для сохранения
+  // 💾 Сохраняем JSON
   const filePath = path.resolve('./data/xp.json');
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, JSON.stringify(allPlayers, null, 2));
 
-  res.status(200).json({ message: "Saved", count: allPlayers.length });
+  return res.status(200).json({
+    message: "XP data saved successfully.",
+    total: allPlayers.length
+  });
 }
