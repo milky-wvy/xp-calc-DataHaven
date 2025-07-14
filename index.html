@@ -9,26 +9,22 @@
 <body>
   <div id="background"></div>
 
-  <!-- 🏆 Лидерборд -->
-  <aside class="leaderboard">
-    <h3>🏆 Leaderboard</h3>
-    <ul id="leaderboard-list"></ul>
-  </aside>
-
-  <div class="container">
+  <div class="container" id="mainContainer">
     <h1>XP Calculator</h1>
-
     <input type="text" id="xpInput" placeholder="Enter your Discord name" />
 
-    <button id="searchBtn">Search XP</button>
+    <button onclick="calculateXP()">Search XP</button>
 
     <h2 class="stat-title">Your Statistic:</h2>
     <div id="result" class="result-grid"></div>
-
-    <div id="realMoose" class="moose-message hidden">You are Real Moose!</div>
+    <div id="realMooseMessage"></div>
   </div>
 
-  <!-- 🌙 Темная тема -->
+  <div id="leaderboard">
+    <h3>🏆 Leaderboard</h3>
+    <ul id="leaderboardList"></ul>
+  </div>
+
   <div class="theme-toggle">
     <label class="switch">
       <input type="checkbox" id="themeToggle" />
