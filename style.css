@@ -1,37 +1,172 @@
-.input-group {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  width: 100%;
-  max-width: 320px;
-  margin: 0 auto;
-  padding: 20px 0;
+/* 🌄 Общий фон */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: #f5f5dc;
+  background-size: cover;
+  background-position: center;
+  transition: background 0.3s ease;
+  min-height: 100vh;
 }
 
-.input-group input[type="text"] {
+/* 🎨 Фон изображением */
+#background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('background_day.png') no-repeat center center / cover;
+  z-index: -1;
+  transition: background 0.3s ease;
+}
+
+/* 💬 Контейнер */
+.container {
+  max-width: 480px;
+  margin: 100px auto;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 32px;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  text-align: center;
+}
+
+/* 📝 Инпут */
+.input-wrapper {
+  margin-bottom: 16px;
+}
+
+#xpInput {
   width: 100%;
   padding: 10px 14px;
   font-size: 16px;
   border-radius: 8px;
   border: 1px solid #ccc;
   box-sizing: border-box;
-  background-color: #fff;
-  color: #000;
 }
 
-.input-group button {
+/* 🧠 Кнопки */
+.btn-group {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+button,
+.button {
   padding: 10px 16px;
   font-size: 16px;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  background-color: #3498db;
-  color: #fff;
+  text-decoration: none;
+  background-color: #6e4b2a;
+  color: white;
   transition: background-color 0.2s ease;
 }
 
-.input-group button:hover {
-  background-color: #2980b9;
+button:hover,
+.button:hover {
+  background-color: #5a3a1e;
+}
+
+.button.secondary {
+  background-color: #c8a57a;
+  color: #fff;
+}
+
+.button.secondary:hover {
+  background-color: #b18c62;
+}
+
+/* 📊 Результат */
+.stat-title {
+  margin-top: 20px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.result-grid {
+  margin-top: 12px;
+  padding: 16px;
+  background-color: #fff3f3;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+/* 🌒 Темная тема */
+body.dark #background {
+  background: url('background_night.png') no-repeat center center / cover;
+}
+
+body.dark .container {
+  background-color: rgba(25, 25, 25, 0.9);
+  color: white;
+}
+
+body.dark #xpInput {
+  background-color: #222;
+  color: white;
+  border: 1px solid #555;
+}
+
+body.dark .result-grid {
+  background-color: #2c2c2c;
+  color: #eee;
+}
+
+/* 🌗 Тема-переключатель */
+.theme-toggle {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #333;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0;
+  right: 0; bottom: 0;
+  background-color: #ccc;
+  border-radius: 24px;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
 }
