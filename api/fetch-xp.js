@@ -13,7 +13,6 @@ const MAX_PAGES = 103;
 export default async function handler(req, res) {
   try {
     if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
-      console.warn('Unauthorized request');
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -32,9 +31,9 @@ export default async function handler(req, res) {
       );
 
       if (response.status === 429) {
-        console.warn(`429 rate limited at page ${i}, retrying after 1s...`);
-        await sleep(1000);
-        i--; // Повторить ту же страницу
+        console.warn(`429 rate limit on page ${i} — pausing for 3 minutes...`);
+        await sleep(180000); // ⏳ 3 минуты
+        i--; // попробовать снова
         continue;
       }
 
@@ -51,10 +50,8 @@ export default async function handler(req, res) {
       }
 
       allUsers.push(...data.players);
-      await sleep(150); // чтобы не заддосить Mee6
+      await sleep(200); // чуть больше между обычными запросами
     }
-
-    console.log(`Fetched ${allUsers.length} users`);
 
     if (!allUsers.length) {
       return res.status(500).json({ error: 'No player data fetched' });
