@@ -7,17 +7,43 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- 🌄/🌃 Фон -->
+  <div id="background"></div>
+
   <div class="container">
     <h1>XP Calculator</h1>
-    <input type="number" id="xpInput" placeholder="Enter your XP"/>
+
+    <!-- Ввод ника -->
+    <input type="text" id="xpInput" placeholder="Enter your Discord name" />
 
     <div class="btn-group">
-      <button onclick="calculateXP()">Calculate</button>
-      <a href="https://mee6.xyz/ru/leaderboard/1317255994459426868" target="_blank" class="button secondary">Check your XP</a>
+      <button onclick="searchXP()">Search XP</button>
+      <a href="https://mee6.xyz/ru/leaderboard/1317255994459426868" target="_blank" class="button secondary">
+        Check your XP
+      </a>
     </div>
 
-    <div id="result"></div>
+    <!-- Прогрессбар, если нужен -->
+    <div id="progressContainer">
+      <div id="progressBar"></div>
+    </div>
+
+    <!-- Заголовок и результат -->
+    <h2 class="stat-title">Your Statistic:</h2>
+    <div id="result" class="result-grid">
+      <!-- JS сюда вставляет результат -->
+    </div>
   </div>
+
+  <!-- 🌗 Переключатель темы -->
+  <div class="theme-toggle">
+    <label class="switch">
+      <input type="checkbox" id="themeToggle" />
+      <span class="slider"></span>
+    </label>
+    <span>Dark Mode</span>
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>
