@@ -1,12 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const usernameInput = document.getElementById('username');
-  const searchBtn = document.getElementById('searchBtn');
-  const checkBtn = document.getElementById('checkBtn');
+  const input = document.getElementById('xpInput');
   const resultContainer = document.getElementById('result');
-  const xpStats = document.getElementById('xp-stats');
-  const rewardsStats = document.getElementById('rewards-stats');
+  const themeToggle = document.getElementById('themeToggle');
+  const background = document.getElementById('background');
 
-  const rewardLevels = [
+  const levels = [
     { xp: 1150, keys: '1 key' },
     { xp: 4675, keys: '2 keys' },
     { xp: 11825, keys: '2 keys' },
@@ -16,58 +14,45 @@ document.addEventListener('DOMContentLoaded', () => {
     { xp: 101675, keys: '3 keys' },
   ];
 
-  async function fetchXP(username) {
+  async function searchXP() {
+    const username = input.value.trim();
+    if (!username) return;
+
+    resultContainer.innerHTML = '⌛ Loading...';
+
     try {
       const res = await fetch(`/api/get-xp?username=${encodeURIComponent(username)}`);
       if (!res.ok) throw new Error('User not found or XP not available.');
-      return await res.json();
-    } catch (err) {
-      throw err;
-    }
-  }
 
-  function updateUI(data) {
-    resultContainer.classList.add('visible');
-    xpStats.innerHTML = `
-      <h3>Player Info</h3>
-      <p><strong>Username:</strong> ${data.username}</p>
-      <p><strong>XP:</strong> ${data.xp}</p>
-      <p><strong>Level:</strong> ${data.level}</p>
-    `;
+      const data = await res.json();
 
-    const remaining = rewardLevels
-      .filter(lvl => lvl.xp > data.xp)
-      .map(lvl => {
+      const nextLevels = levels.filter(lvl => lvl.xp > data.xp).map(lvl => {
         const diff = lvl.xp - data.xp;
         return `<li>${lvl.keys} — через ${diff.toLocaleString()} XP</li>`;
       });
 
-    rewardsStats.innerHTML = `
-      <h3>Keys Progress</h3>
-      <ul>${remaining.join('')}</ul>
-    `;
-  }
-
-  function showError(message) {
-    resultContainer.classList.add('visible');
-    xpStats.innerHTML = '';
-    rewardsStats.innerHTML = '';
-    resultContainer.innerHTML = `<div class="error">❌ ${message}</div>`;
-  }
-
-  async function handleSearch() {
-    const username = usernameInput.value.trim();
-    if (!username) return;
-
-    resultContainer.innerHTML = '';
-    try {
-      const data = await fetchXP(username);
-      updateUI(data);
+      resultContainer.innerHTML = `
+        <div>
+          <h3>Player Info</h3>
+          <p><strong>Username:</strong> ${data.username}</p>
+          <p><strong>XP:</strong> ${data.xp.toLocaleString()}</p>
+          <p><strong>Level:</strong> ${data.level}</p>
+        </div>
+        <div style="margin-top: 20px;">
+          <h3>Keys Progress</h3>
+          <ul>${nextLevels.length ? nextLevels.join('') : '<li>Все ключи собраны!</li>'}</ul>
+        </div>
+      `;
     } catch (err) {
-      showError(err.message);
+      resultContainer.innerHTML = `<div class="error">❌ ${err.message}</div>`;
     }
   }
 
-  searchBtn.addEventListener('click', handleSearch);
-  checkBtn.addEventListener('click', handleSearch);
+  // 🌙 Тема
+  themeToggle.addEventListener('change', (e) => {
+    document.body.classList.toggle('dark', e.target.checked);
+  });
+
+  // 🛠 Экспортируем функцию в глобал, чтобы кнопка работала
+  window.searchXP = searchXP;
 });
