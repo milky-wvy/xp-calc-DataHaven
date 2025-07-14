@@ -5,29 +5,53 @@ const supabase = createClient(
   process.env.SUPABASE_ANON_KEY
 );
 
+const MEE6_LIMIT = 100;
+const MEE6_TOTAL_PAGES = 103; // можно динамически посчитать
+
 export default async function handler(req, res) {
   try {
     if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
       return res.status(401).send('Unauthorized');
     }
 
-    const allUsers = [];
+    console.log('Starting XP fetch...');
 
-    for (let i = 0; i < 103; i++) {
-      const response = await fetch(`https://mee6.xyz/api/plugins/levels/leaderboard/1317255994459426868?limit=100&page=${i}`, {
+    // Генерируем массив промисов для параллельных запросов
+    const fetchPromises = Array.from({ length: MEE6_TOTAL_PAGES }, (_, i) => {
+      const page = i + 1;
+      return fetch(`https://mee6.xyz/api/plugins/levels/leaderboard/1317255994459426868?limit=${MEE6_LIMIT}&page=${page}`, {
         headers: {
           Authorization: process.env.MEE6_TOKEN,
           'User-Agent': 'XPCollector/1.0'
         }
+      })
+      .then(async response => {
+        if (!response.ok) {
+          console.warn(`Failed to fetch page ${page}, status: ${response.status}`);
+          return null;
+        }
+        const data = await response.json();
+        if (!data.players || data.players.length === 0) return null;
+        return data.players;
+      })
+      .catch(err => {
+        console.error(`Error fetching page ${page}:`, err);
+        return null;
       });
+    });
 
-      const data = await response.json();
-      if (!data.players || data.players.length === 0) break;
+    // Ждём все ответы
+    const pagesData = await Promise.all(fetchPromises);
 
-      allUsers.push(...data.players);
+    // Фильтруем null и объединяем в один массив
+    const allPlayers = pagesData.filter(Boolean).flat();
+
+    if (!allPlayers.length) {
+      console.warn('No player data fetched.');
+      return res.status(500).json({ error: 'No player data fetched' });
     }
 
-    const formatted = allUsers.map(p => ({
+    const formatted = allPlayers.map(p => ({
       username: p.username,
       xp: p.xp,
       level: p.level
@@ -38,13 +62,16 @@ export default async function handler(req, res) {
       .upsert(formatted, { onConflict: ['username'] });
 
     if (error) {
-      console.error("Supabase error:", error);
+      console.error('Supabase error:', error);
       return res.status(500).json({ error: 'DB write failed' });
     }
 
+    console.log(`Successfully saved ${formatted.length} users`);
+
     return res.status(200).json({ message: 'XP saved to Supabase', total: formatted.length });
+
   } catch (error) {
-    console.error("Unexpected error:", error);
+    console.error('Unexpected error:', error);
     return res.status(500).json({ error: 'Unexpected server error', details: error.message });
   }
 }
