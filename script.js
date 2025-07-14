@@ -1,57 +1,73 @@
-const xpStats = document.getElementById("xp-stats");
-const rewardsStats = document.getElementById("rewards-stats");
-const form = document.querySelector("form");
-const input = document.querySelector("input[name='username']");
-const toggle = document.getElementById("dark-toggle");
+document.addEventListener('DOMContentLoaded', () => {
+  const usernameInput = document.getElementById('username');
+  const searchBtn = document.getElementById('searchBtn');
+  const checkBtn = document.getElementById('checkBtn');
+  const resultContainer = document.getElementById('result');
+  const xpStats = document.getElementById('xp-stats');
+  const rewardsStats = document.getElementById('rewards-stats');
 
-const levels = [
-  { xp: 1150, keys: "1 key" },
-  { xp: 4675, keys: "2 keys" },
-  { xp: 11825, keys: "2 keys" },
-  { xp: 23850, keys: "2 keys" },
-  { xp: 42000, keys: "2 keys" },
-  { xp: 67525, keys: "3 keys" },
-  { xp: 101675, keys: "3 keys" }
-];
+  const rewardLevels = [
+    { xp: 1150, keys: '1 key' },
+    { xp: 4675, keys: '2 keys' },
+    { xp: 11825, keys: '2 keys' },
+    { xp: 23850, keys: '2 keys' },
+    { xp: 42000, keys: '2 keys' },
+    { xp: 67525, keys: '3 keys' },
+    { xp: 101675, keys: '3 keys' },
+  ];
 
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const username = input.value.trim();
-  if (!username) return;
+  async function fetchXP(username) {
+    try {
+      const res = await fetch(`/api/get-xp?username=${encodeURIComponent(username)}`);
+      if (!res.ok) throw new Error('User not found or XP not available.');
+      return await res.json();
+    } catch (err) {
+      throw err;
+    }
+  }
 
-  xpStats.innerHTML = "Loading...";
-  rewardsStats.innerHTML = "";
-
-  try {
-    const res = await fetch(`/api/get-xp?username=${encodeURIComponent(username)}`);
-    const data = await res.json();
-
-    if (!res.ok) throw new Error(data.error || "Request failed");
-
-    const { xp, level } = data;
-
+  function updateUI(data) {
+    resultContainer.classList.add('visible');
     xpStats.innerHTML = `
-      <p><strong>Username:</strong> ${username}</p>
-      <p><strong>XP:</strong> ${xp.toLocaleString()}</p>
-      <p><strong>Level:</strong> ${level}</p>
+      <h3>Player Info</h3>
+      <p><strong>Username:</strong> ${data.username}</p>
+      <p><strong>XP:</strong> ${data.xp}</p>
+      <p><strong>Level:</strong> ${data.level}</p>
     `;
 
-    // Вывод расчёта до ключей
-    const lines = levels.map((lvl) => {
-      if (xp >= lvl.xp) {
-        return `<li><strong>${lvl.keys}</strong> — уже получено ✅</li>`;
-      } else {
-        const remaining = lvl.xp - xp;
-        return `<li><strong>${lvl.keys}</strong> — осталось ${remaining.toLocaleString()} XP</li>`;
-      }
-    });
+    const remaining = rewardLevels
+      .filter(lvl => lvl.xp > data.xp)
+      .map(lvl => {
+        const diff = lvl.xp - data.xp;
+        return `<li>${lvl.keys} — через ${diff.toLocaleString()} XP</li>`;
+      });
 
-    rewardsStats.innerHTML = `<ul>${lines.join("")}</ul>`;
-  } catch (err) {
-    xpStats.innerHTML = `<span style="color:red">❌ ${err.message}</span>`;
+    rewardsStats.innerHTML = `
+      <h3>Keys Progress</h3>
+      <ul>${remaining.join('')}</ul>
+    `;
   }
-});
 
-toggle.addEventListener("change", () => {
-  document.body.classList.toggle("dark", toggle.checked);
+  function showError(message) {
+    resultContainer.classList.add('visible');
+    xpStats.innerHTML = '';
+    rewardsStats.innerHTML = '';
+    resultContainer.innerHTML = `<div class="error">❌ ${message}</div>`;
+  }
+
+  async function handleSearch() {
+    const username = usernameInput.value.trim();
+    if (!username) return;
+
+    resultContainer.innerHTML = '';
+    try {
+      const data = await fetchXP(username);
+      updateUI(data);
+    } catch (err) {
+      showError(err.message);
+    }
+  }
+
+  searchBtn.addEventListener('click', handleSearch);
+  checkBtn.addEventListener('click', handleSearch);
 });
