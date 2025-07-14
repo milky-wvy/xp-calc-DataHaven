@@ -1,5 +1,4 @@
 {
-  "_note": "Runs fetch-xp every 30 minutes using Vercel Cron",
   "crons": [
     {
       "path": "/api/fetch-xp",
