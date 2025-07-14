@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY // обязательно service role!
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 function sleep(ms) {
@@ -15,9 +15,19 @@ export default async function handler(req, res) {
   }
 
   try {
+    // получаем с какой страницы начинать
+    const { data: progressData } = await supabase
+      .from('xp_fetch_progress')
+      .select('last_page')
+      .eq('id', 1)
+      .single();
+
+    let startPage = progressData?.last_page || 0;
+    let endPage = startPage + 25;
+
     const allUsers = [];
 
-    for (let i = 0; i < 103; i++) {
+    for (let i = startPage; i < endPage; i++) {
       console.log(`Fetching page ${i}...`);
       const response = await fetch(`https://mee6.xyz/api/plugins/levels/leaderboard/1317255994459426868?limit=100&page=${i}`, {
         headers: {
@@ -27,9 +37,9 @@ export default async function handler(req, res) {
       });
 
       if (response.status === 429) {
-        console.warn(`Rate limited at page ${i}, waiting 3s...`);
+        console.warn(`429 at page ${i}, wait 3s...`);
         await sleep(3000);
-        i--; // повторим ту же страницу позже
+        i--;
         continue;
       }
 
@@ -38,8 +48,7 @@ export default async function handler(req, res) {
 
       allUsers.push(...data.players);
 
-      // 💤 Пауза между запросами — 3 секунды
-      await sleep(3000);
+      await sleep(3000); // пауза между запросами
     }
 
     if (allUsers.length === 0) {
@@ -53,18 +62,24 @@ export default async function handler(req, res) {
       level: p.level
     }));
 
-    console.log("Formatted data sample:", formatted.slice(0, 3));
-
     const { error } = await supabase
       .from('users_xp')
       .upsert(formatted, { onConflict: ['discord_id'] });
 
     if (error) {
-      console.error("Supabase error details:", error);
+      console.error("Supabase error:", error);
       return res.status(500).json({ error: 'DB write failed', details: error.message });
     }
 
-    return res.status(200).json({ message: 'XP saved to Supabase', total: formatted.length });
+    // сохраняем прогресс
+    await supabase
+      .from('xp_fetch_progress')
+      .upsert({ id: 1, last_page: endPage });
+
+    return res.status(200).json({
+      message: `XP saved to Supabase from pages ${startPage} to ${endPage - 1}`,
+      total: formatted.length
+    });
   } catch (err) {
     console.error("Unexpected error:", err);
     return res.status(500).json({ error: 'Unexpected server error', details: err.message });
