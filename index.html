@@ -14,16 +14,10 @@
     <h1>XP Calculator</h1>
 
     <!-- Ввод ника -->
-    <div class="input-wrapper">
-      <input type="text" id="xpInput" placeholder="Enter your Discord name" />
-    </div>
+    <input type="text" id="xpInput" placeholder="Enter your Discord handle" />
 
-    <!-- Кнопки -->
     <div class="btn-group">
-      <button id="searchBtn">Search XP</button>
-      <a href="https://mee6.xyz/ru/leaderboard/1317255994459426868" target="_blank" class="button secondary">
-        Check your XP
-      </a>
+      <button onclick="searchXP()">Search XP</button>
     </div>
 
     <!-- Прогрессбар -->
@@ -34,8 +28,19 @@
     <!-- Заголовок и результат -->
     <h2 class="stat-title">Your Statistic:</h2>
     <div id="result" class="result-grid">
-      <!-- Результаты будут сюда вставляться через JS -->
+      <!-- JS сюда вставляет результат -->
     </div>
+
+    <!-- Сообщение об успехе -->
+    <div id="finalMessage" class="final-message">You are Real Moose!</div>
+  </div>
+
+  <!-- Лидерборд справа -->
+  <div id="leaderboard" class="leaderboard">
+    <h2>🏆 Leaderboard</h2>
+    <ul id="leaderboardList">
+      <!-- JS вставит топ игроков -->
+    </ul>
   </div>
 
   <!-- 🌗 Переключатель темы -->
@@ -47,6 +52,6 @@
     <span>Dark Mode</span>
   </div>
 
-  <script src="script.js" defer></script>
+  <script src="script.js"></script>
 </body>
 </html>
