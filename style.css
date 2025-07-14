@@ -1,258 +1,37 @@
-/* === Общие стили === */
-body {
-  font-family: sans-serif;
-  margin: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  transition: background-color 0.3s ease;
-  overflow: hidden;
-}
-
-/* === Фоновое изображение === */
-#background {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: -1;
-  width: 100vw;
-  height: 100vh;
-  background: url('background_day.png') no-repeat center center fixed;
-  background-size: cover;
-  transition: background-image 0.3s ease;
-}
-
-body.dark #background {
-  background-image: url('background_night.png');
-}
-
-/* === Контейнер === */
-.container {
-  background: rgba(245, 235, 220, 0.95);
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  max-width: 450px;
-  width: 100%;
-  text-align: center;
-  transition: background 0.3s ease;
-}
-
-.container h1 {
-  color: #5a3e2b;
-  font-weight: bold;
-  margin-bottom: 20px;
-}
-
-/* === Инпут === */
-input {
-  padding: 10px;
-  font-size: 1em;
-  width: 100%;
-  margin-bottom: 15px;
-  border: 2px solid #5a3e2b;
-  border-radius: 6px;
-  background-color: #fff8f0;
-  color: #5a3e2b;
-  font-weight: bold;
-}
-
-/* === Кнопки === */
-.btn-group {
+.input-group {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-button,
-.button {
-  padding: 10px 20px;
-  font-size: 1em;
-  background: #8b5e3c;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-  text-decoration: none;
-  display: inline-block;
-  text-align: center;
-  transition: background 0.3s ease;
-}
-
-button:hover,
-.button:hover {
-  background: #6f472c;
-}
-
-.secondary {
-  background: #c49a6c;
-  color: #fff;
-}
-
-.secondary:hover {
-  background: #a6784d;
-}
-
-/* === Прогрессбар === */
-#progressContainer {
-  margin-top: 15px;
-  background: #ddd;
-  border-radius: 8px;
-  height: 15px;
-  overflow: hidden;
-}
-
-#progressBar {
-  height: 100%;
-  background: #8b5e3c;
-  width: 0%;
-  transition: width 0.3s ease;
-}
-
-/* === Заголовок статистики === */
-.stat-title {
-  margin-top: 25px;
-  text-align: center;
-  color: #5a3e2b;
-}
-
-/* === Сетка результата === */
-.result-grid {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
-  background: #fff8f0;
-  padding: 15px;
-  border-radius: 8px;
-  border: 1px solid #d3bda3;
-  font-weight: bold;
-  color: #5a3e2b;
-  transition: background 0.3s ease, color 0.3s ease;
-}
-
-.result-grid > div {
-  width: 48%;
-  text-align: left;
-}
-
-.result-grid h3 {
-  margin-top: 0;
-  margin-bottom: 10px;
-  font-size: 1.1em;
-}
-
-.result-grid p {
-  margin: 6px 0;
-  line-height: 1.4;
-}
-
-/* === Переключатель темы (слева внизу) === */
-.theme-toggle {
-  position: fixed;
-  bottom: 20px;
-  left: 20px;
-  display: flex;
   align-items: center;
-  gap: 10px;
-  z-index: 10;
-  color: #5a3e2b;
-  font-weight: bold;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+  padding: 20px 0;
 }
 
-/* Переключатель: switch */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 44px;
-  height: 24px;
+.input-group input[type="text"] {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  background-color: #fff;
+  color: #000;
 }
 
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
+.input-group button {
+  padding: 10px 16px;
+  font-size: 16px;
+  border: none;
+  border-radius: 8px;
   cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  border-radius: 34px;
-  transition: 0.4s;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  border-radius: 50%;
-  transition: 0.4s;
-}
-
-.switch input:checked + .slider {
-  background-color: #8b5e3c;
-}
-
-.switch input:checked + .slider:before {
-  transform: translateX(20px);
-}
-
-/* === Тёмная тема === */
-body.dark {
-  background-color: #1e1e1e;
+  background-color: #3498db;
   color: #fff;
+  transition: background-color 0.2s ease;
 }
 
-body.dark .container {
-  background: #2c2c2c;
-}
-
-body.dark input {
-  background-color: #444;
-  color: #fff;
-  border-color: #888;
-}
-
-body.dark button,
-body.dark .button {
-  background-color: #5a3e2b;
-  color: #fff;
-}
-
-body.dark .secondary {
-  background-color: #a6784d;
-  color: #fff;
-}
-
-body.dark .secondary:hover {
-  background-color: #8a5f3c;
-}
-
-body.dark #progressContainer {
-  background-color: #444;
-}
-
-body.dark #progressBar {
-  background-color: #c49a6c;
-}
-
-body.dark .result-grid {
-  background-color: #333;
-  color: #f0e68c;
-  border-color: #555;
-}
-
-body.dark .theme-toggle {
-  color: #f0e68c;
+.input-group button:hover {
+  background-color: #2980b9;
 }
