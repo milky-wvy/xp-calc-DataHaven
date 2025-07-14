@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import HttpsProxyAgent from 'https-proxy-agent';
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -6,6 +7,17 @@ const supabase = createClient(
 );
 
 const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function getRandomProxy() {
+  const { data, error } = await supabase
+    .from('proxies')
+    .select('proxy_url')
+    .order('RANDOM()')
+    .limit(1);
+
+  if (error || !data || data.length === 0) return null;
+  return data[0].proxy_url;
+}
 
 export default async function handler(req, res) {
   if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -19,17 +31,25 @@ export default async function handler(req, res) {
   try {
     for (let i = 0; i < 103; i++) {
       console.log(`Fetching page ${i}...`);
-      const response = await fetch(`https://mee6.xyz/api/plugins/levels/leaderboard/1317255994459426868?limit=100&page=${i}`, {
-        headers: {
-          Authorization: process.env.MEE6_TOKEN,
-          'User-Agent': 'XPCollector/1.0'
+
+      const proxyUrl = await getRandomProxy();
+      const agent = proxyUrl ? new HttpsProxyAgent(proxyUrl) : undefined;
+
+      const response = await fetch(
+        `https://mee6.xyz/api/plugins/levels/leaderboard/1317255994459426868?limit=100&page=${i}`,
+        {
+          headers: {
+            Authorization: process.env.MEE6_TOKEN,
+            'User-Agent': 'XPCollector/1.0'
+          },
+          agent
         }
-      });
+      );
 
       if (response.status === 429) {
         console.warn(`429 rate limited at page ${i}, retrying after 3 minutes...`);
         await wait(180000); // 3 мин
-        i--; // попробуем снова ту же страницу
+        i--;
         continue;
       }
 
@@ -45,7 +65,7 @@ export default async function handler(req, res) {
         break;
       }
 
-      await wait(3000); // Пауза 3 сек между запросами
+      await wait(3000);
     }
 
     if (allUsers.length === 0) {
@@ -60,12 +80,8 @@ export default async function handler(req, res) {
       level: p.level
     }));
 
-    // Убираем дубликаты по discord_id
     const unique = new Map();
-    formatted.forEach(user => {
-      unique.set(user.discord_id, user);
-    });
-
+    formatted.forEach(user => unique.set(user.discord_id, user));
     const deduplicated = Array.from(unique.values());
 
     console.log(`Total players fetched: ${allUsers.length}`);
