@@ -14,17 +14,35 @@ const MAX_RETRIES = 10;
 async function getProxies() {
   const { data, error } = await supabase.from('proxies').select('proxy_url');
   if (error || !data) throw new Error('Failed to load proxies from Supabase');
-  return data.map(p => p.proxy_url);
+
+  const urls = data.map(p => p.proxy_url).filter(Boolean);
+
+  if (urls.length === 0) {
+    throw new Error('Proxy list is empty or invalid');
+  }
+
+  return urls;
 }
 
 // 📥 Один запрос с ретраями
 async function fetchPage(page, proxies) {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     const proxy = proxies[Math.floor(Math.random() * proxies.length)];
-    const agent = new HttpsProxyAgent({
-      ...new URL(proxy),
-      rejectUnauthorized: false
-    });
+    if (!proxy || typeof proxy !== 'string') {
+      console.warn(`Invalid proxy at attempt ${attempt}`);
+      continue;
+    }
+
+    let agent;
+    try {
+      agent = new HttpsProxyAgent({
+        ...new URL(proxy),
+        rejectUnauthorized: false
+      });
+    } catch (e) {
+      console.warn(`Invalid proxy URL format: ${proxy}`);
+      continue;
+    }
 
     try {
       console.log(`Page ${page} | Attempt ${attempt} | Proxy: ${proxy}`);
