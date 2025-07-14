@@ -1,75 +1,57 @@
-// Запуск поиска XP по нику
-async function searchXP() {
-  const input = document.getElementById('xpInput');
-  const username = input.value.trim();
+const xpStats = document.getElementById("xp-stats");
+const rewardsStats = document.getElementById("rewards-stats");
+const form = document.querySelector("form");
+const input = document.querySelector("input[name='username']");
+const toggle = document.getElementById("dark-toggle");
 
-  if (!username) {
-    document.getElementById('result').innerText = '⚠️ Please enter a nickname';
-    return;
-  }
+const levels = [
+  { xp: 1150, keys: "1 key" },
+  { xp: 4675, keys: "2 keys" },
+  { xp: 11825, keys: "2 keys" },
+  { xp: 23850, keys: "2 keys" },
+  { xp: 42000, keys: "2 keys" },
+  { xp: 67525, keys: "3 keys" },
+  { xp: 101675, keys: "3 keys" }
+];
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const username = input.value.trim();
+  if (!username) return;
+
+  xpStats.innerHTML = "Loading...";
+  rewardsStats.innerHTML = "";
 
   try {
     const res = await fetch(`/api/get-xp?username=${encodeURIComponent(username)}`);
-    if (!res.ok) {
-      document.getElementById('result').innerText = '❌ User not found or XP not available.';
-      return;
-    }
-
     const data = await res.json();
-    const xp = data.xp;
-    const level = data.level;
 
-    // Сохраняем последний ввод
-    localStorage.setItem('lastUsername', username);
+    if (!res.ok) throw new Error(data.error || "Request failed");
 
-    // Статистика
-    const minutes = xp / 9.5;
-    const hours = minutes / 60;
-    const days = hours / 24;
+    const { xp, level } = data;
 
-    document.getElementById('result').innerHTML = `
-      <div class="result-grid">
-        <div>
-          <h3>🔑 Progress</h3>
-          <p><strong>Level:</strong> ${level}</p>
-          <p><strong>XP:</strong> ${xp.toLocaleString()}</p>
-        </div>
-        <div>
-          <h3>📊 Your Stats</h3>
-          <p><strong>Minutes:</strong> ${minutes.toFixed(2)}</p>
-          <p><strong>Hours:</strong> ${hours.toFixed(2)}</p>
-          <p><strong>Days:</strong> ${days.toFixed(2)}</p>
-        </div>
-      </div>
+    xpStats.innerHTML = `
+      <p><strong>Username:</strong> ${username}</p>
+      <p><strong>XP:</strong> ${xp.toLocaleString()}</p>
+      <p><strong>Level:</strong> ${level}</p>
     `;
+
+    // Вывод расчёта до ключей
+    const lines = levels.map((lvl) => {
+      if (xp >= lvl.xp) {
+        return `<li><strong>${lvl.keys}</strong> — уже получено ✅</li>`;
+      } else {
+        const remaining = lvl.xp - xp;
+        return `<li><strong>${lvl.keys}</strong> — осталось ${remaining.toLocaleString()} XP</li>`;
+      }
+    });
+
+    rewardsStats.innerHTML = `<ul>${lines.join("")}</ul>`;
   } catch (err) {
-    console.error(err);
-    document.getElementById('result').innerText = '❌ Something went wrong.';
-  }
-}
-
-// Автозагрузка по сохранённому нику
-window.addEventListener('load', () => {
-  const saved = localStorage.getItem('lastUsername');
-  if (saved) {
-    document.getElementById('xpInput').value = saved;
-    searchXP();
-  }
-
-  // Тема
-  if (localStorage.getItem('theme') === 'dark') {
-    document.body.classList.add('dark');
-    document.getElementById('themeToggle').checked = true;
+    xpStats.innerHTML = `<span style="color:red">❌ ${err.message}</span>`;
   }
 });
 
-// Переключение темы
-document.getElementById('themeToggle').addEventListener('change', (e) => {
-  if (e.target.checked) {
-    document.body.classList.add('dark');
-    localStorage.setItem('theme', 'dark');
-  } else {
-    document.body.classList.remove('dark');
-    localStorage.setItem('theme', 'light');
-  }
+toggle.addEventListener("change", () => {
+  document.body.classList.toggle("dark", toggle.checked);
 });
