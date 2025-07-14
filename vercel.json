@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/fetch-xp",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 * * * *"
     }
   ]
 }
