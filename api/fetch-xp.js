@@ -6,17 +6,17 @@ const supabase = createClient(
 );
 
 const MEE6_LIMIT = 100;
-const MEE6_TOTAL_PAGES = 103; // можно динамически посчитать
+const MEE6_TOTAL_PAGES = 103;
 
 export default async function handler(req, res) {
   try {
     if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
+      console.warn("Unauthorized request");
       return res.status(401).send('Unauthorized');
     }
 
     console.log('Starting XP fetch...');
 
-    // Генерируем массив промисов для параллельных запросов
     const fetchPromises = Array.from({ length: MEE6_TOTAL_PAGES }, (_, i) => {
       const page = i + 1;
       return fetch(`https://mee6.xyz/api/plugins/levels/leaderboard/1317255994459426868?limit=${MEE6_LIMIT}&page=${page}`, {
@@ -40,10 +40,7 @@ export default async function handler(req, res) {
       });
     });
 
-    // Ждём все ответы
     const pagesData = await Promise.all(fetchPromises);
-
-    // Фильтруем null и объединяем в один массив
     const allPlayers = pagesData.filter(Boolean).flat();
 
     if (!allPlayers.length) {
@@ -57,13 +54,15 @@ export default async function handler(req, res) {
       level: p.level
     }));
 
+    console.log('Formatted data sample:', formatted.slice(0, 3));
+
     const { error } = await supabase
       .from('users_xp')
       .upsert(formatted, { onConflict: ['username'] });
 
     if (error) {
-      console.error('Supabase error:', error);
-      return res.status(500).json({ error: 'DB write failed' });
+      console.error('Supabase error details:', error);
+      return res.status(500).json({ error: 'DB write failed', details: error.message });
     }
 
     console.log(`Successfully saved ${formatted.length} users`);
