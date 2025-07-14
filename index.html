@@ -7,43 +7,28 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- 🌄/🌃 Фон -->
   <div id="background"></div>
+
+  <!-- 🏆 Лидерборд -->
+  <aside class="leaderboard">
+    <h3>🏆 Leaderboard</h3>
+    <ul id="leaderboard-list"></ul>
+  </aside>
 
   <div class="container">
     <h1>XP Calculator</h1>
 
-    <!-- Ввод ника -->
-    <input type="text" id="xpInput" placeholder="Enter your Discord handle" />
+    <input type="text" id="xpInput" placeholder="Enter your Discord name" />
 
-    <div class="btn-group">
-      <button onclick="searchXP()">Search XP</button>
-    </div>
+    <button id="searchBtn">Search XP</button>
 
-    <!-- Прогрессбар -->
-    <div id="progressContainer">
-      <div id="progressBar"></div>
-    </div>
-
-    <!-- Заголовок и результат -->
     <h2 class="stat-title">Your Statistic:</h2>
-    <div id="result" class="result-grid">
-      <!-- JS сюда вставляет результат -->
-    </div>
+    <div id="result" class="result-grid"></div>
 
-    <!-- Сообщение об успехе -->
-    <div id="finalMessage" class="final-message">You are Real Moose!</div>
+    <div id="realMoose" class="moose-message hidden">You are Real Moose!</div>
   </div>
 
-  <!-- Лидерборд справа -->
-  <div id="leaderboard" class="leaderboard">
-    <h2>🏆 Leaderboard</h2>
-    <ul id="leaderboardList">
-      <!-- JS вставит топ игроков -->
-    </ul>
-  </div>
-
-  <!-- 🌗 Переключатель темы -->
+  <!-- 🌙 Темная тема -->
   <div class="theme-toggle">
     <label class="switch">
       <input type="checkbox" id="themeToggle" />
