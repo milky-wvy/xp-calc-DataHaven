@@ -5,29 +5,19 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 export default async function handler(req, res) {
   if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
     return res.status(401).send('Unauthorized');
   }
 
+  const allUsers = [];
+  const maxPagesPerRun = 25;
+  let pagesFetched = 0;
+
   try {
-    // получаем с какой страницы начинать
-    const { data: progressData } = await supabase
-      .from('xp_fetch_progress')
-      .select('last_page')
-      .eq('id', 1)
-      .single();
-
-    let startPage = progressData?.last_page || 0;
-    let endPage = startPage + 25;
-
-    const allUsers = [];
-
-    for (let i = startPage; i < endPage; i++) {
+    for (let i = 0; i < 103; i++) {
       console.log(`Fetching page ${i}...`);
       const response = await fetch(`https://mee6.xyz/api/plugins/levels/leaderboard/1317255994459426868?limit=100&page=${i}`, {
         headers: {
@@ -37,21 +27,29 @@ export default async function handler(req, res) {
       });
 
       if (response.status === 429) {
-        console.warn(`429 at page ${i}, wait 3s...`);
-        await sleep(3000);
-        i--;
+        console.warn(`429 rate limited at page ${i}, retrying after 3 minutes...`);
+        await wait(180000); // 3 мин
+        i--; // попробуем снова ту же страницу
         continue;
       }
 
       const data = await response.json();
+
       if (!data.players || data.players.length === 0) break;
 
       allUsers.push(...data.players);
+      pagesFetched++;
 
-      await sleep(3000); // пауза между запросами
+      if (pagesFetched % maxPagesPerRun === 0) {
+        console.log(`Reached ${maxPagesPerRun} pages. Pausing 5 minutes...`);
+        break;
+      }
+
+      await wait(3000); // Пауза 3 сек между запросами
     }
 
     if (allUsers.length === 0) {
+      console.error("No player data fetched");
       return res.status(500).json({ error: 'No player data fetched' });
     }
 
@@ -62,24 +60,33 @@ export default async function handler(req, res) {
       level: p.level
     }));
 
+    // Убираем дубликаты по discord_id
+    const unique = new Map();
+    formatted.forEach(user => {
+      unique.set(user.discord_id, user);
+    });
+
+    const deduplicated = Array.from(unique.values());
+
+    console.log(`Total players fetched: ${allUsers.length}`);
+    console.log(`Unique entries: ${deduplicated.length}`);
+    console.log("Sample:", deduplicated.slice(0, 3));
+
     const { error } = await supabase
       .from('users_xp')
-      .upsert(formatted, { onConflict: ['discord_id'] });
+      .upsert(deduplicated, { onConflict: ['discord_id'] });
 
     if (error) {
       console.error("Supabase error:", error);
       return res.status(500).json({ error: 'DB write failed', details: error.message });
     }
 
-    // сохраняем прогресс
-    await supabase
-      .from('xp_fetch_progress')
-      .upsert({ id: 1, last_page: endPage });
-
     return res.status(200).json({
-      message: `XP saved to Supabase from pages ${startPage} to ${endPage - 1}`,
-      total: formatted.length
+      message: 'XP saved to Supabase',
+      fetched: allUsers.length,
+      unique: deduplicated.length
     });
+
   } catch (err) {
     console.error("Unexpected error:", err);
     return res.status(500).json({ error: 'Unexpected server error', details: err.message });
