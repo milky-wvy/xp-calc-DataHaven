@@ -1,15 +1,21 @@
 function calculateXP() {
-  const lvl5 = 1150;
-  const lvl10 = 4675;
-  const lvl15 = 11825;
-  const lvl20 = 23850;
-  const lvl25 = 42000;
-  const lvl30 = 67525;
-  const lvl35 = 101675;
-
   const input = document.getElementById('xpInput');
   const xp = parseInt(input.value);
-  if (isNaN(xp) || xp < 0) return alert("Please enter a valid number");
+
+  if (isNaN(xp) || xp < 0) {
+    document.getElementById('result').innerText = '⚠️ Please enter a valid, non-negative XP amount.';
+    return;
+  }
+
+  const levels = [
+    { xp: 1150, keys: '1 key' },
+    { xp: 4675, keys: '2 keys' },
+    { xp: 11825, keys: '2 keys' },
+    { xp: 23850, keys: '2 keys' },
+    { xp: 42000, keys: '2 keys' },
+    { xp: 67525, keys: '3 keys' },
+    { xp: 101675, keys: '3 keys' },
+  ];
 
   const minute = xp / 9.5;
   const hour = minute / 60;
@@ -18,29 +24,16 @@ function calculateXP() {
   let string = '';
   let target = 0;
 
-  if (xp < lvl5) {
-    string = '1 key';
-    target = lvl5;
-  } else if (xp < lvl10) {
-    string = '2 keys';
-    target = lvl10;
-  } else if (xp < lvl15) {
-    string = '2 keys';
-    target = lvl15;
-  } else if (xp < lvl20) {
-    string = '2 keys';
-    target = lvl20;
-  } else if (xp < lvl25) {
-    string = '2 keys';
-    target = lvl25;
-  } else if (xp < lvl30) {
-    string = '3 keys';
-    target = lvl30;
-  } else if (xp < lvl35) {
-    string = '3 keys';
-    target = lvl35;
-  } else {
-    document.getElementById('result').innerText = 'You have reached the max level. You beast!';
+  for (let i = 0; i < levels.length; i++) {
+    if (xp < levels[i].xp) {
+      string = levels[i].keys;
+      target = levels[i].xp;
+      break;
+    }
+  }
+
+  if (target === 0) {
+    document.getElementById('result').innerText = '🏆 You have reached the max level. You beast!';
     return;
   }
 
@@ -52,15 +45,14 @@ function calculateXP() {
   const minutes = minute_lost % 60;
 
   const result = 
-`
-TIME SPENT ON THE SERVER:
-Your XP: ${xp}
-Your minutes: ${minute.toFixed(2)}
-Your hours: ${hour.toFixed(2)}
-Your days: ${day.toFixed(2)}
+`📊 TIME SPENT ON THE SERVER:
+XP: ${xp.toLocaleString()}
+⏱ Minutes: ${minute.toFixed(2)}
+🕒 Hours: ${hour.toFixed(2)}
+📆 Days: ${day.toFixed(2)}
 
-To reach ${string}, you need:
-${days} days ${hours} hours ${minutes} minutes`;
+🎯 To reach ${string}, you need:
+${days}d ${hours}h ${minutes}m`;
 
   document.getElementById('result').innerText = result;
 }
