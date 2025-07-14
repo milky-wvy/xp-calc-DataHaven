@@ -2,15 +2,9 @@
   "name": "xp-calc-datahaven",
   "version": "1.0.0",
   "type": "module",
-  "scripts": {
-    "start": "node api/fetch-xp.js"
-  },
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.1",
-    "https-proxy-agent": "^7.0.2",
-    "node-fetch": "^3.3.2"
-  },
-  "engines": {
-    "node": ">=18"
+    "@supabase/supabase-js": "^2.39.3",
+    "node-fetch": "^3.3.2",
+    "https-proxy-agent": "^7.0.2"
   }
 }
