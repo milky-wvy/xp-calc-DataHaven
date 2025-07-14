@@ -12,9 +12,9 @@ const MAX_RETRIES = 10;
 
 // ⚙️ Получаем список прокси из Supabase
 async function getProxies() {
-  const { data, error } = await supabase.from('proxies').select('url');
+  const { data, error } = await supabase.from('proxies').select('proxy_url');
   if (error || !data) throw new Error('Failed to load proxies from Supabase');
-  return data.map(p => p.url);
+  return data.map(p => p.proxy_url);
 }
 
 // 📥 Один запрос с ретраями
