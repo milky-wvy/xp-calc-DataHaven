@@ -1,55 +1,45 @@
-import fs from 'fs';
-import path from 'path';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
 
 export default async function handler(req, res) {
-  // 🔐 Проверка доступа по секрету
   if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
-    return res.status(401).end('Unauthorized');
+    return res.status(401).send('Unauthorized');
   }
 
-  const token = process.env.MEE6_TOKEN;
-  const guildId = "1317255994459426868";
+  const allUsers = [];
 
-  if (!token) {
-    return res.status(500).json({ error: "MEE6_TOKEN is not set" });
-  }
-
-  const allPlayers = [];
-  let page = 0;
-
-  while (true) {
-    const url = `https://mee6.xyz/api/plugins/levels/leaderboard/${guildId}?limit=100&page=${page}`;
-    const response = await fetch(url, {
+  for (let i = 0; i < 103; i++) {
+    const response = await fetch(`https://mee6.xyz/api/plugins/levels/leaderboard/1317255994459426868?limit=100&page=${i}`, {
       headers: {
-        "Authorization": token,
-        "User-Agent": "Mozilla/5.0"
+        Authorization: process.env.MEE6_TOKEN,
+        'User-Agent': 'XPCollector/1.0'
       }
     });
 
-    if (!response.ok) {
-      return res.status(response.status).json({
-        error: `Failed to fetch page ${page}: ${response.statusText}`
-      });
-    }
-
     const data = await response.json();
-    const players = data?.players || [];
+    if (!data.players || data.players.length === 0) break;
 
-    if (players.length === 0) break;
-
-    allPlayers.push(...players);
-    console.log(`Fetched page ${page} (${players.length} players)`);
-    page++;
-    await new Promise(r => setTimeout(r, 500)); // ⏳ защитимся от спама
+    allUsers.push(...data.players);
   }
 
-  // 💾 Сохраняем JSON
-  const filePath = path.resolve('./data/xp.json');
-  fs.mkdirSync(path.dirname(filePath), { recursive: true });
-  fs.writeFileSync(filePath, JSON.stringify(allPlayers, null, 2));
+  const formatted = allUsers.map(p => ({
+    username: p.username,
+    xp: p.xp,
+    level: p.level
+  }));
 
-  return res.status(200).json({
-    message: "XP data saved successfully.",
-    total: allPlayers.length
-  });
+  const { error } = await supabase
+    .from('users_xp')
+    .upsert(formatted, { onConflict: ['username'] });
+
+  if (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'DB write failed' });
+  }
+
+  return res.status(200).json({ message: 'XP saved to Supabase', total: formatted.length });
 }
